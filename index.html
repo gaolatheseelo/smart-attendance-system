@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .attendance-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .attendance-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.15);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .video-container {
+            position: relative;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #f7fafc;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        video, canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        
+        .qr-scanner {
+            background: #f7fafc;
+            border-radius: 15px;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+        
+        .qr-scanner.active {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.1);
+        }
+        
+        .qr-icon {
+            font-size: 4rem;
+            color: #a0aec0;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn.success {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .status.success {
+            background: rgba(72, 187, 120, 0.1);
+            color: #2d7d32;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+        
+        .status.error {
+            background: rgba(245, 101, 101, 0.1);
+            color: #d32f2f;
+            border: 1px solid rgba(245, 101, 101, 0.3);
+        }
+        
+        .status.info {
+            background: rgba(66, 153, 225, 0.1);
+            color: #1976d2;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        
+        .attendance-log {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            grid-column: span 2;
+        }
+        
+        .log-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f7fafc;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #48bb78;
+            transition: all 0.3s ease;
+        }
+        
+        .log-entry:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+        
+        .log-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .log-method {
+            font-size: 0.9rem;
+            color: #718096;
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 15px;
+        }
+        
+        .log-time {
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .attendance-log {
+                grid-column: span 1;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Smart Attendance System</h1>
+            <p>Advanced Face Recognition & QR Code Scanning</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Face Recognition Card -->
+            <div class="attendance-card">
+                <h3 class="card-title">
+                    <span>👤</span>
+                    Face Recognition
+                </h3>
+                
+                <div class="video-container" id="faceVideoContainer">
+                    <video id="faceVideo" autoplay muted></video>
+                    <canvas id="faceCanvas" style="display: none;"></canvas>
+                </div>
+                
+                <div id="faceStatus" class="status info">Click "Start Face Detection" to begin</div>
+                
+                <button id="startFaceBtn" class="btn">
+                    <span>🚀</span>
+                    Start Face Detection
+                </button>
+                
+                <button id="captureBtn" class="btn success" style="display: none;">
+                    <span>📸</span>
+                    Capture Attendance
+                </button>
+            </div>
+            
+            <!-- QR Code Card -->
+            <div class="attendance-card">
+                <h3 class="card-title">
+                    <span>📱</span>
+                    QR Code Scanner
+                </h3>
+                
+                <div class="qr-scanner" id="qrScanner">
+                    <div class="qr-icon">📱</div>
+                    <p style="color: #718096; text-align: center;">Click "Start QR Scanner" to activate camera</p>
+                </div>
+                
+                <div id="qrStatus" class="status info">QR Scanner ready</div>
+                
+                <button id="startQrBtn" class="btn">
+                    <span>📷</span>
+                    Start QR Scanner
+                </button>
+                
+                <div class="input-group">
+                    <label for="manualQr">Or enter QR code manually:</label>
+                    <input type="text" id="manualQr" placeholder="Enter QR code or student ID">
+                </div>
+                
+                <button id="submitQrBtn" class="btn success">
+                    <span>✓</span>
+                    Submit Manual Entry
+                </button>
+            </div>
+        </div>
+        
+        <!-- Attendance Log -->
+        <div class="attendance-log">
+            <h3 class="log-title">
+                <span>📊</span>
+                Today's Attendance Log
+            </h3>
+            <div id="attendanceList">
+                <!-- Attendance entries will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AttendanceSystem {
+            constructor() {
+                this.attendanceLog = [];
+                this.faceStream = null;
+                this.qrStream = null;
+                this.isProcessingFace = false;
+                this.isProcessingQr = false;
+                this.studentDatabase = {
+                    'STU001': 'John Doe',
+                    'STU002': 'Jane Smith',
+                    'STU003': 'Mike Johnson',
+                    'STU004': 'Sarah Wilson',
+                    'STU005': 'David Brown'
+                };
+                this.initializeEventListeners();
+            }
+            
+            initializeEventListeners() {
+                document.getElementById('startFaceBtn').addEventListener('click', () => this.startFaceDetection());
+                document.getElementById('captureBtn').addEventListener('click', () => this.captureAttendance());
+                document.getElementById('startQrBtn').addEventListener('click', () => this.startQrScanner());
+                document.getElementById('submitQrBtn').addEventListener('click', () => this.submitManualEntry());
+                
+                // Auto-submit on Enter key in manual QR input
+                document.getElementById('manualQr').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.submitManualEntry();
+                    }
+                });
+            }
+            
+            async startFaceDetection() {
+                try {
+                    const video = document.getElementById('faceVideo');
+                    const startBtn = document.getElementById('startFaceBtn');
+                    const captureBtn = document.getElementById('captureBtn');
+                    const status = document.getElementById('faceStatus');
+                    
+                    status.textContent = 'Initializing camera...';
+                    status.className = 'status info';
+                    
+                    this.faceStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        } 
+                    });
+                    
+                    video.srcObject = this.faceStream;
+                    
+                    video.onloadedmetadata = () => {
+                        status.textContent = 'Camera ready! Position your face in the frame';
+                        status.className = 'status success';
+                        startBtn.style.display = 'none';
+                        captureBtn.style.display = 'block';
+                    };
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    document.getElementById('faceStatus').textContent = 'Error: Could not access camera. Please check permissions.';
+                    document.getElementById('faceStatus').className = 'status error';
+                }
+            }
+            
+            captureAttendance() {
+                const video = document.getElementById('faceVideo');
+                const canvas = document.getElementById('faceCanvas');
+                const ctx = canvas.getContext('2d');
+                const status = document.getElementById('faceStatus');
+                
+                if (this.isProcessingFace) return;
+                this.isProcessingFace = true;
+                
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw video frame to canvas
+                ctx.drawImage(video, 0, 0);
+                
+                status.textContent = 'Processing face recognition...';
+                status.className = 'status info';
+                
+                // Simulate face recognition processing
+                setTimeout(() => {
+                    const recognizedStudent = this.simulateFaceRecognition();
+                    
+                    if (recognizedStudent) {
+                        status.textContent = `Face recognized: ${recognizedStudent}`;
+                        status.className = 'status success';
+                        this.recordAttendance(recognizedStudent, 'Face Recognition');
+                    } else {
+                        status.textContent = 'Face not recognized. Please try again or register first.';
+                        status.className = 'status error';
+                    }
+                    
+                    this.isProcessingFace = false;
+                }, 2000);
+            }
+            
+            simulateFaceRecognition() {
+                // Simulate face recognition with random success
+                const students = Object.values(this.studentDatabase);
+                const success = Math.random() > 0.3; // 70% success rate
+                
+                if (success) {
+                    return students[Math.floor(Math.random() * students.length)];
+                }
+                return null;
+            }
+            
+            async startQrScanner() {
+                try {
+                    const qrScanner = document.getElementById('qrScanner');
+                    const startBtn = document.getElementById('startQrBtn');
+                    const status = document.getElementById('qrStatus');
+                    
+                    status.textContent = 'Starting QR scanner...';
+                    status.className = 'status info';
+                    
+                    this.qrStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment' // Use back camera if available
+                        } 
+                    });
+                    
+                    const video = document.createElement('video');
+                    video.srcObject = this.qrStream;
+                    video.autoplay = true;
+                    video.muted = true;
+                    video.style.width = '100%';
+                    video.style.borderRadius = '10px';
+                    
+                    qrScanner.innerHTML = '';
+                    qrScanner.appendChild(video);
+                    qrScanner.classList.add('active');
+                    
+                    status.textContent = 'QR scanner active - point camera at QR code';
+                    status.className = 'status success';
+                    
+                    // Simulate QR code detection
+                    this.simulateQrDetection();
+                    
+                    startBtn.textContent = '🛑 Stop QR Scanner';
+                    startBtn.onclick = () => this.stopQrScanner();
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    document.getElementById('qrStatus').textContent = 'Error: Could not access camera for QR scanning';
+                    document.getElementById('qrStatus').className = 'status error';
+                }
+            }
+            
+            simulateQrDetection() {
+                if (!this.qrStream) return;
+                
+                setTimeout(() => {
+                    if (this.qrStream && !this.isProcessingQr) {
+                        // Simulate random QR code detection
+                        if (Math.random() > 0.7) { // 30% chance every 3 seconds
+                            const studentIds = Object.keys(this.studentDatabase);
+                            const randomId = studentIds[Math.floor(Math.random() * studentIds.length)];
+                            this.processQrCode(randomId);
+                        } else {
+                            this.simulateQrDetection(); // Continue scanning
+                        }
+                    }
+                }, 3000);
+            }
+            
+            stopQrScanner() {
+                if (this.qrStream) {
+                    this.qrStream.getTracks().forEach(track => track.stop());
+                    this.qrStream = null;
+                }
+                
+                const qrScanner = document.getElementById('qrScanner');
+                const startBtn = document.getElementById('startQrBtn');
+                const status = document.getElementById('qrStatus');
+                
+                qrScanner.innerHTML = `
+                    <div class="qr-icon">📱</div>
+                    <p style="color: #718096; text-align: center;">QR scanner stopped</p>
+                `;
+                qrScanner.classList.remove('active');
+                
+                status.textContent = 'QR scanner stopped';
+                status.className = 'status info';
+                
+                startBtn.innerHTML = '<span>📷</span> Start QR Scanner';
+                startBtn.onclick = () => this.startQrScanner();
+            }
+            
+            submitManualEntry() {
+                const input = document.getElementById('manualQr');
+                const qrCode = input.value.trim();
+                
+                if (!qrCode) {
+                    document.getElementById('qrStatus').textContent = 'Please enter a QR code or student ID';
+                    document.getElementById('qrStatus').className = 'status error';
+                    return;
+                }
+                
+                this.processQrCode(qrCode);
+                input.value = '';
+            }
+            
+            processQrCode(qrCode) {
+                if (this.isProcessingQr) return;
+                this.isProcessingQr = true;
+                
+                const status = document.getElementById('qrStatus');
+                status.textContent = 'Processing QR code...';
+                status.className = 'status info';
+                
+                setTimeout(() => {
+                    const studentName = this.studentDatabase[qrCode];
+                    
+                    if (studentName) {
+                        status.textContent = `QR code verified: ${studentName}`;
+                        status.className = 'status success';
+                        this.recordAttendance(studentName, 'QR Code');
+                    } else {
+                        status.textContent = 'Invalid QR code. Student not found.';
+                        status.className = 'status error';
+                    }
+                    
+                    this.isProcessingQr = false;
+                }, 1500);
+            }
+            
+            recordAttendance(studentName, method) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                
+                // Check if student already marked attendance today
+                const today = now.toDateString();
+                const alreadyMarked = this.attendanceLog.some(entry => 
+                    entry.name === studentName && entry.date === today
+                );
+                
+                if (alreadyMarked) {
+                    this.showTemporaryMessage('Student already marked present today!', 'info');
+                    return;
+                }
+                
+                const entry = {
+                    name: studentName,
+                    method: method,
+                    time: timeString,
+                    date: today
+                };
+                
+                this.attendanceLog.unshift(entry); // Add to beginning of array
+                this.updateAttendanceDisplay();
+                
+                // Show success message
+                this.showTemporaryMessage(`✅ Attendance recorded for ${studentName}!`, 'success');
+            }
+            
+            updateAttendanceDisplay() {
+                const listElement = document.getElementById('attendanceList');
+                
+                if (this.attendanceLog.length === 0) {
+                    listElement.innerHTML = '<p style="text-align: center; color: #718096;">No attendance recorded today</p>';
+                    return;
+                }
+                
+                listElement.innerHTML = this.attendanceLog.map(entry => `
+                    <div class="log-entry">
+                        <div>
+                            <div class="log-name">${entry.name}</div>
+                            <div class="log-method">${entry.method}</div>
+                        </div>
+                        <div class="log-time">${entry.time}</div>
+                    </div>
+                `).join('');
+            }
+            
+            showTemporaryMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `status ${type}`;
+                messageDiv.textContent = message;
+                messageDiv.style.position = 'fixed';
+                messageDiv.style.top = '20px';
+                messageDiv.style.right = '20px';
+                messageDiv.style.zIndex = '1000';
+                messageDiv.style.maxWidth = '300px';
+                messageDiv.style.animation = 'slideInRight 0.5s ease';
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.style.animation = 'slideOutRight 0.5s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(messageDiv);
+                    }, 500);
+                }, 3000);
+            }
+        }
+        
+        // Initialize the attendance system when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new AttendanceSystem();
+        });
+        
+        // Add custom animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
